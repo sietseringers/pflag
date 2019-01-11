@@ -172,6 +172,7 @@ type Flag struct {
 	Name                string              // name as it appears on command line
 	Shorthand           string              // one-letter abbreviated flag
 	Usage               string              // help message
+	Header              string              // printed above this flag in help message
 	Value               Value               // value as set
 	DefValue            string              // default value (as text); for usage message
 	Changed             bool                // If the user set the value (or if left to default)
@@ -739,14 +740,22 @@ func (f *FlagSet) FlagUsagesWrapped(cols int) string {
 			line += fmt.Sprintf(" (DEPRECATED: %s)", flag.Deprecated)
 		}
 
+		if flag.Header != "" {
+			line = fmt.Sprintf("\n%s\n%s", flag.Header, line)
+		}
+
 		lines = append(lines, line)
 	})
 
 	for _, line := range lines {
-		sidx := strings.Index(line, "\x00")
+		start := strings.LastIndex(line, "\n") + 1
+		sidx := strings.Index(line[start:], "\x00")
 		spacing := strings.Repeat(" ", maxlen-sidx)
 		// maxlen + 2 comes from + 1 for the \x00 and + 1 for the (deliberate) off-by-one in maxlen-sidx
-		fmt.Fprintln(buf, line[:sidx], spacing, wrap(maxlen+2, cols, line[sidx+1:]))
+		if start != 0 {
+			fmt.Fprint(buf, line[:start])
+		}
+		fmt.Fprintln(buf, line[start:start+sidx], spacing, wrap(maxlen+2, cols, line[start+sidx+1:]))
 	}
 
 	return buf.String()
