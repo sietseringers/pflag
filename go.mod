@@ -1,3 +1,3 @@
-module github.com/spf13/pflag
+module github.com/sietseringers/pflag
 
 go 1.12
